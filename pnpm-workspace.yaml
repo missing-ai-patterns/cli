@@ -1,4 +1,5 @@
-# pnpm 11 settings for the @map/score package.
+packages:
+  - packages/*
 
 # Skip re-verifying/installing deps before each `pnpm run` script.
 verifyDepsBeforeRun: false

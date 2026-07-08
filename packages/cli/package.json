@@ -1,7 +1,7 @@
 {
   "name": "@missing-ai-patterns/cli",
   "version": "0.4.0",
-  "description": "MAP CLI — initialize an AI-architecture workspace, analyze a codebase, and adopt Missing AI Patterns.",
+  "description": "MAP CLI \u2014 initialize an AI-architecture workspace, analyze a codebase, and adopt Missing AI Patterns.",
   "type": "module",
   "license": "MIT",
   "repository": {
@@ -33,7 +33,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
-    "sync-snapshot": "node ../scripts/build-registry.ts --out ./registry-snapshot/registry.json"
+    "sync-snapshot": "node ./scripts/sync-snapshot.ts"
   },
   "keywords": [
     "ai",
@@ -45,7 +45,8 @@
   ],
   "dependencies": {
     "@inquirer/prompts": "^7.0.0",
-    "commander": "^14.0.0"
+    "commander": "^14.0.0",
+    "@missing-ai-patterns/score": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

@@ -11,7 +11,8 @@
 
 import type { Command, CommandContext, CommandResult } from "../command.ts";
 import { OK, FAILED } from "../command.ts";
-import type { CatalogEntry, CatalogStatus, MapScore, PatternCategory } from "../../domain/index.ts";
+import { renderScoreSummary } from "@missing-ai-patterns/score";
+import type { CatalogEntry, CatalogStatus, PatternCategory } from "../../domain/index.ts";
 
 const STATUS_ICONS: Readonly<Record<CatalogStatus, string>> = {
   published: "✅",
@@ -76,7 +77,7 @@ export const patternsCommand: Command = {
           reporter.info(`       ${truncate(entry.summary, 90)}`);
         }
         if (entry.score) {
-          reporter.info(`       ${scoreLine(entry.score)}`);
+          reporter.info(`       ${renderScoreSummary(entry.score)}`);
         }
       }
     }
@@ -119,22 +120,6 @@ function groupCategories(entries: readonly CatalogEntry[]): readonly CategoryGro
     groups.set(entry.category, group);
   }
   return [...groups.entries()].map(([category, grouped]) => ({ category, entries: grouped }));
-}
-
-/** The MAP Score "summary" rendering from map-score/SPEC.md, one line of stars. */
-function scoreLine(score: MapScore): string {
-  const dims: ReadonlyArray<readonly [string, number]> = [
-    ["Complexity", score.complexity],
-    ["Latency", score.latency],
-    ["Cost", score.cost],
-    ["Accuracy", score.accuracyImpact],
-    ["Readiness", score.productionReadiness],
-  ];
-  return dims.map(([label, n]) => `${label} ${stars(n)}`).join(" · ");
-}
-
-function stars(n: number): string {
-  return "★".repeat(n) + "☆".repeat(5 - n);
 }
 
 function truncate(text: string, max: number): string {

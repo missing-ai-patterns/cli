@@ -13,14 +13,13 @@ import type { PatternId, PatternCategory } from "./pattern.ts";
 /** Mirrors the roadmap legend: ⬜ Planned · 🟡 In progress · ✅ Published. */
 export type CatalogStatus = "published" | "in-progress" | "planned";
 
-/** The five MAP Score dimensions, 1..5 stars each (see map-score/SPEC.md). */
-export interface MapScore {
-  readonly complexity: number;
-  readonly latency: number;
-  readonly cost: number;
-  readonly accuracyImpact: number;
-  readonly productionReadiness: number;
-}
+/**
+ * The five MAP Score dimensions, 1..5 stars each. The schema (and rendering)
+ * is the shared @missing-ai-patterns/score package; the registry builder
+ * validates values, so entries parsed from a registry satisfy it.
+ */
+import type { MapScore } from "@missing-ai-patterns/score";
+export type { MapScore };
 
 export interface CatalogEntry {
   readonly id: PatternId;

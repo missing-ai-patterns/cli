@@ -9,7 +9,8 @@
 
 import type { Command, CommandContext, CommandResult } from "../command.ts";
 import { OK, FAILED } from "../command.ts";
-import type { CatalogEntry, MapScore } from "../../domain/index.ts";
+import { DIMENSIONS, renderStars } from "@missing-ai-patterns/score";
+import type { CatalogEntry } from "../../domain/index.ts";
 
 export const explainCommand: Command = {
   name: "explain",
@@ -66,8 +67,8 @@ function render(ctx: CommandContext, entry: CatalogEntry): void {
   if (entry.score !== undefined) {
     reporter.info("");
     reporter.info("MAP Score:");
-    for (const [label, value] of scoreRows(entry.score)) {
-      reporter.info(`  ${label.padEnd(22)} ${"★".repeat(value)}${"☆".repeat(5 - value)}`);
+    for (const dim of DIMENSIONS) {
+      reporter.info(`  ${dim.label.padEnd(22)} ${renderStars(entry.score[dim.id])}`);
     }
   }
 
@@ -93,14 +94,4 @@ function section(
   print("");
   print(title);
   for (const item of items) print(`  - ${item}`);
-}
-
-function scoreRows(score: MapScore): ReadonlyArray<readonly [string, number]> {
-  return [
-    ["Complexity", score.complexity],
-    ["Latency", score.latency],
-    ["Cost", score.cost],
-    ["Accuracy Impact", score.accuracyImpact],
-    ["Production Readiness", score.productionReadiness],
-  ];
 }
