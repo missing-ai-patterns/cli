@@ -33,14 +33,14 @@ jobs:
       - name: Audit dependencies
         run: pnpm audit --audit-level moderate
 
+      - name: Build
+        run: pnpm build
+
       - name: Lint
         run: pnpm lint
 
       - name: Typecheck
         run: pnpm typecheck
-
-      - name: Build
-        run: pnpm build
 
       - name: Test (with coverage gates)
         run: pnpm test:coverage
