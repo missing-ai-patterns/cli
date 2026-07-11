@@ -8,11 +8,13 @@ export type {
   RegistrySource,
   RegistrySourceKind,
   RegistrySourceOptions,
+  LoadedRegistry,
 } from "./registry-source.ts";
 export {
   DEFAULT_REGISTRY_URL,
   registryUpdateUrl,
   resolveRegistrySource,
   loadRegistry,
+  loadRegistryResilient,
   userRegistryCachePath,
 } from "./registry-source.ts";

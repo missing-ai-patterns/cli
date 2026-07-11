@@ -66,6 +66,40 @@ export async function resolveRegistrySource(
   return { kind: "bundled", path: options.bundledPath ?? bundledRegistryPath() };
 }
 
+export interface LoadedRegistry {
+  readonly document: RegistryDocument;
+  readonly source: RegistrySource;
+  /** Set when the resolved source was unusable and the bundled snapshot took over. */
+  readonly degradedFrom?: RegistrySource;
+}
+
+/**
+ * Load the registry from the resolved source, falling back to the bundled
+ * snapshot when the user cache is unreadable or invalid. A broken cache must
+ * degrade one source, not disable the whole CLI; an explicit `MAP_REGISTRY`
+ * override stays loud, because silently ignoring it would be worse than failing.
+ */
+export async function loadRegistryResilient(
+  storage: Storage,
+  options: RegistrySourceOptions = {},
+): Promise<LoadedRegistry> {
+  const source = await resolveRegistrySource(storage, options);
+  try {
+    return { document: await loadRegistry(storage, source), source };
+  } catch (error) {
+    if (source.kind !== "cache") throw error;
+    const bundled: RegistrySource = {
+      kind: "bundled",
+      path: options.bundledPath ?? bundledRegistryPath(),
+    };
+    return {
+      document: await loadRegistry(storage, bundled),
+      source: bundled,
+      degradedFrom: source,
+    };
+  }
+}
+
 export async function loadRegistry(
   storage: Storage,
   source: RegistrySource,

@@ -27,7 +27,7 @@ Requires Node >= 20.
 | `map recommend [path]` | Rule-based gaps: which patterns the detected architecture is missing, and why. |
 | `map patterns [text]` | Browse/search the catalog (`--category`, `--status`, `--json`). |
 | `map doctor` | Health checks: environment, workspace, registry, rule-table consistency. Non-zero on problems. |
-| `map update` | Download the latest registry into `~/.map/registry.json`. |
+| `map update` | Download the latest registry into `~/.map/registry.json`; reports what changed. `--check` compares without writing. |
 | `map graph`, `map diff` | Scaffolded stubs for future modules. |
 
 The core loop on a Python RAG project:
@@ -79,7 +79,10 @@ Resolution order (see `src/knowledge/registry-source.ts`):
 3. `registry-snapshot/registry.json` — bundled with the package at build time.
 
 `map update` downloads from the map repository's latest release
-(`MAP_REGISTRY=<url>` or `--registry <url>` overrides the URL).
+(`MAP_REGISTRY=<url>` or `--registry <url>` overrides the URL; downloads abort
+after 30s). A corrupt user cache never disables the CLI: commands fall back to
+the bundled snapshot with a warning, `map doctor` names the broken file, and
+`map update` repairs it.
 
 ## Architecture
 

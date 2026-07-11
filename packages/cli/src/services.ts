@@ -14,8 +14,7 @@ import type { KnowledgeBase, PatternCatalog } from "./knowledge/index.ts";
 import {
   InMemoryKnowledgeBase,
   RegistryPatternCatalog,
-  loadRegistry,
-  resolveRegistrySource,
+  loadRegistryResilient,
 } from "./knowledge/index.ts";
 import type { PatternGraph } from "./graph/index.ts";
 import { InMemoryPatternGraph } from "./graph/index.ts";
@@ -50,12 +49,20 @@ export function createDefaultServices(overrides: ServiceOverrides = {}): Service
 /**
  * The default catalog reads the MAP registry: an explicit `MAP_REGISTRY` file,
  * the user cache written by `map update`, or the snapshot bundled with the
- * package (see knowledge/registry-source.ts).
+ * package (see knowledge/registry-source.ts). A broken cache degrades to the
+ * bundled snapshot with a warning instead of disabling every command.
  */
 function defaultCatalog(storage: Storage): PatternCatalog {
-  return new RegistryPatternCatalog(async () =>
-    loadRegistry(storage, await resolveRegistrySource(storage)),
-  );
+  return new RegistryPatternCatalog(async () => {
+    const loaded = await loadRegistryResilient(storage);
+    if (loaded.degradedFrom !== undefined) {
+      process.stderr.write(
+        `warning: ignoring broken registry cache (${loaded.degradedFrom.path}); ` +
+          "using the bundled snapshot. Run 'map update' to repair it.\n",
+      );
+    }
+    return loaded.document;
+  });
 }
 
 function defaultAnalyzers(storage: Storage): AnalyzerRegistry {

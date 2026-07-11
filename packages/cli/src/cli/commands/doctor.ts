@@ -18,7 +18,11 @@ import {
   parseConfig,
 } from "../../config/index.ts";
 import { RECOMMENDATION_RULES } from "../../recommendation/index.ts";
-import { RegistryPatternCatalog, resolveRegistrySource } from "../../knowledge/index.ts";
+import {
+  RegistryPatternCatalog,
+  loadRegistry,
+  resolveRegistrySource,
+} from "../../knowledge/index.ts";
 
 const MIN_NODE_MAJOR = 20;
 
@@ -244,6 +248,20 @@ async function checkRegistry(ctx: CommandContext): Promise<readonly CheckResult[
     if (age !== undefined) {
       provenance += `, ${age} day(s) old`;
       stale = age > STALE_REGISTRY_DAYS;
+    }
+  }
+
+  // Commands survive a broken cache (they degrade to the bundled snapshot),
+  // so doctor must name it explicitly or nobody ever repairs it.
+  if (source.kind === "cache") {
+    try {
+      await loadRegistry(storage, source);
+    } catch {
+      results.push({
+        verdict: "warn",
+        message: `registry cache is corrupt (${source.path}); commands are using the bundled snapshot`,
+        hint: "Run 'map update' to re-download it.",
+      });
     }
   }
 
