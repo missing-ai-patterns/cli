@@ -5,6 +5,7 @@ import {
   RegistryPatternCatalog,
   resolveRegistrySource,
   loadRegistry,
+  loadRegistryResilient,
   registryUpdateUrl,
   DEFAULT_REGISTRY_URL,
 } from "../src/knowledge/index.ts";
@@ -124,6 +125,49 @@ describe("registry source resolution", () => {
     ).rejects.toThrow(/could not read the pattern registry/);
     await expect(
       loadRegistry(storage, { kind: "cache", path: "/bad.json" }),
+    ).rejects.toThrow(/invalid pattern registry/);
+  });
+});
+
+describe("loadRegistryResilient", () => {
+  const options = {
+    env: {},
+    cachePath: "/home/.map/registry.json",
+    bundledPath: "/pkg/registry.json",
+  };
+
+  it("returns the cache when it is healthy", async () => {
+    const storage = fakeStorage({
+      "/home/.map/registry.json": registryJson(PATTERNS),
+      "/pkg/registry.json": registryJson([]),
+    });
+    const loaded = await loadRegistryResilient(storage, options);
+    expect(loaded.source.kind).toBe("cache");
+    expect(loaded.degradedFrom).toBeUndefined();
+    expect(loaded.document.patterns).toHaveLength(3);
+  });
+
+  it("degrades a broken cache to the bundled snapshot", async () => {
+    const storage = fakeStorage({
+      "/home/.map/registry.json": "{truncated",
+      "/pkg/registry.json": registryJson(PATTERNS),
+    });
+    const loaded = await loadRegistryResilient(storage, options);
+    expect(loaded.source).toEqual({ kind: "bundled", path: "/pkg/registry.json" });
+    expect(loaded.degradedFrom).toEqual({ kind: "cache", path: "/home/.map/registry.json" });
+    expect(loaded.document.patterns).toHaveLength(3);
+  });
+
+  it("stays loud when an explicit MAP_REGISTRY override is broken", async () => {
+    const storage = fakeStorage({
+      "/custom/registry.json": "{broken",
+      "/pkg/registry.json": registryJson(PATTERNS),
+    });
+    await expect(
+      loadRegistryResilient(storage, {
+        ...options,
+        env: { MAP_REGISTRY: "/custom/registry.json" },
+      }),
     ).rejects.toThrow(/invalid pattern registry/);
   });
 });
