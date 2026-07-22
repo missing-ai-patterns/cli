@@ -30,9 +30,10 @@ describe("map init", () => {
       expect(code).toBe(0);
 
       const config = JSON.parse(await readFile(join(dir, ".map/map.config.json"), "utf8"));
-      expect(config.version).toBe(2);
+      expect(config.version).toBe(3);
       expect(config.project.name).toBe(dir.split("/").pop());
       expect(config.registry.source).toBe("default");
+      expect(config.targets.claude.output).toBe("CLAUDE.md");
 
       for (const sub of WORKSPACE_DIRS) {
         expect((await stat(join(dir, ".map", sub))).isDirectory()).toBe(true);
@@ -93,7 +94,7 @@ describe("map init", () => {
       expect(output).toContain("Legacy workspace files found");
       await expect(stat(join(dir, ".map/config.yaml"))).rejects.toThrow();
       await expect(stat(join(dir, ".map/project.yaml"))).rejects.toThrow();
-      expect(JSON.parse(await readFile(join(dir, ".map/map.config.json"), "utf8")).version).toBe(2);
+      expect(JSON.parse(await readFile(join(dir, ".map/map.config.json"), "utf8")).version).toBe(3);
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
