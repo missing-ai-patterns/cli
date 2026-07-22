@@ -6,10 +6,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/missing-ai-patterns/cli.git",
+    "url": "git+https://github.com/missing-ai-patterns/sdk.git",
     "directory": "packages/registry"
   },
-  "homepage": "https://github.com/missing-ai-patterns/map",
+  "homepage": "https://github.com/missing-ai-patterns/patterns",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

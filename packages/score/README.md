@@ -6,7 +6,7 @@ Impact, Production Readiness**.
 
 This package is the schema, validation, and rendering. The canonical specification
 lives in the map repository:
-[`docs/specs/map-score.md`](https://github.com/missing-ai-patterns/map/blob/main/docs/specs/map-score.md).
+[`docs/specs/map-score.md`](https://github.com/missing-ai-patterns/patterns/blob/main/docs/specs/map-score.md).
 
 ## Why
 
