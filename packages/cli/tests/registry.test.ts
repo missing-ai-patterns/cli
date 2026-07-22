@@ -7,6 +7,7 @@ import {
   loadRegistry,
   loadRegistryResilient,
   registryUpdateUrl,
+  defaultRegistryUrl,
   DEFAULT_REGISTRY_URL,
 } from "../src/knowledge/index.ts";
 import { RECOMMENDATION_RULES } from "../src/recommendation/index.ts";
@@ -116,6 +117,14 @@ describe("registry source resolution", () => {
     );
     expect(registryUpdateUrl({ MAP_REGISTRY: "/a/file.json" })).toBe(DEFAULT_REGISTRY_URL);
     expect(registryUpdateUrl({})).toBe(DEFAULT_REGISTRY_URL);
+  });
+
+  it("lets MAP_REGISTRY_URL override the published download URL (repo-rename safe)", () => {
+    const url = "https://github.com/missing-ai-patterns/patterns/releases/latest/download/registry.json";
+    expect(defaultRegistryUrl({ MAP_REGISTRY_URL: url })).toBe(url);
+    expect(defaultRegistryUrl({})).toBe(DEFAULT_REGISTRY_URL);
+    // MAP_REGISTRY_URL sets the default that a bare `map update` uses.
+    expect(registryUpdateUrl({ MAP_REGISTRY_URL: url })).toBe(url);
   });
 
   it("loadRegistry wraps unreadable and invalid registries in actionable errors", async () => {

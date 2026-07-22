@@ -12,6 +12,7 @@ export type {
 } from "./registry-source.ts";
 export {
   DEFAULT_REGISTRY_URL,
+  defaultRegistryUrl,
   registryUpdateUrl,
   resolveRegistrySource,
   loadRegistry,
