@@ -23,6 +23,13 @@ import {
   loadRegistry,
   resolveRegistrySource,
 } from "../../knowledge/index.ts";
+import {
+  loadContext,
+  compile,
+  resolveCompilerConfig,
+  globToRegExp,
+} from "../../compiler/index.ts";
+import type { Context } from "../../compiler/index.ts";
 
 const MIN_NODE_MAJOR = 20;
 
@@ -60,6 +67,7 @@ export const doctorCommand: Command = {
 
     results.push(checkNode());
     results.push(...(await checkWorkspace(ctx)));
+    results.push(...(await checkCompiler(ctx)));
     results.push(...(await checkRegistry(ctx)));
     results.push(await checkRuleTable(ctx));
 
@@ -170,6 +178,126 @@ async function checkWorkspace(ctx: CommandContext): Promise<readonly CheckResult
 
   results.push(await checkAnalysisReport(ctx, mapDir));
   return results;
+}
+
+/**
+ * Context-compiler health: the resolved sources/targets, the adapters they need,
+ * and the documents they compile — duplicate sections and broken references.
+ * Skips quietly when there is no config (checkWorkspace already flags that).
+ */
+async function checkCompiler(ctx: CommandContext): Promise<readonly CheckResult[]> {
+  const { storage, adapters } = ctx.services;
+  const mapDir = join(ctx.cwd, MAP_DIR);
+  const configPath = join(mapDir, CONFIG_FILE);
+  if (!(await storage.exists(configPath))) return [];
+
+  let resolved;
+  let projectName: string;
+  try {
+    const config = parseConfig(await storage.readFile(configPath));
+    resolved = resolveCompilerConfig(config);
+    projectName = config.project.name;
+  } catch {
+    return []; // checkWorkspace already reported the parse failure.
+  }
+
+  const results: CheckResult[] = [
+    { verdict: "ok", message: `compiler configured (${resolved.targets.length} target(s))` },
+  ];
+
+  // Unsupported targets: every configured adapter must resolve.
+  const unknown = resolved.targets
+    .filter((t) => adapters.get(t.adapter) === undefined)
+    .map((t) => t.id);
+  results.push(
+    unknown.length === 0
+      ? { verdict: "ok", message: "all targets map to a known adapter" }
+      : {
+          verdict: "fail",
+          message: `unsupported target(s): ${unknown.join(", ")}`,
+          hint: `Known adapters: ${adapters.ids().join(", ")}.`,
+        },
+  );
+
+  // Sources that match no files.
+  const relFiles = (await storage.listFiles(mapDir))
+    .map((rel) => rel.split(/[\\/]/).join("/"))
+    .filter((rel) => rel.endsWith(".md"));
+  const emptyGlobs = resolved.sources.filter(
+    (glob) => !relFiles.some((rel) => globToRegExp(glob).test(rel)),
+  );
+  results.push(
+    emptyGlobs.length === 0
+      ? { verdict: "ok", message: "all compiler sources resolve to at least one document" }
+      : {
+          verdict: "warn",
+          message: `source(s) match no files: ${emptyGlobs.join(", ")}`,
+          hint: "Add the document(s) under .map/ or remove the source from map.config.json.",
+        },
+  );
+
+  const context = await loadContext(storage, mapDir, {
+    projectName,
+    sources: resolved.sources,
+  });
+  results.push(checkDuplicateSections(context));
+  results.push(checkBrokenReferences(context, relFiles));
+
+  // A last sanity pass: compilation itself must not throw.
+  compile(context, resolved, adapters);
+
+  return results;
+}
+
+/** Duplicate top-level headings across documents muddle the compiled output. */
+function checkDuplicateSections(context: Context): CheckResult {
+  const seen = new Map<string, number>();
+  for (const doc of context.documents) {
+    const key = doc.title.trim().toLowerCase();
+    seen.set(key, (seen.get(key) ?? 0) + 1);
+  }
+  const dupes = [...seen.entries()].filter(([, n]) => n > 1).map(([title]) => title);
+  return dupes.length === 0
+    ? { verdict: "ok", message: `no duplicate sections (${context.documents.length} document(s))` }
+    : {
+        verdict: "warn",
+        message: `duplicate section title(s): ${dupes.join(", ")}`,
+        hint: "Rename headings so each document contributes a distinct section.",
+      };
+}
+
+/** Relative markdown links to other `.map` documents should resolve. */
+function checkBrokenReferences(context: Context, relFiles: readonly string[]): CheckResult {
+  const known = new Set(relFiles);
+  const broken: string[] = [];
+  const linkRe = /\]\(([^)]+\.md)\)/g;
+  for (const doc of context.documents) {
+    const dir = doc.path.includes("/") ? doc.path.slice(0, doc.path.lastIndexOf("/")) : "";
+    for (const match of doc.body.matchAll(linkRe)) {
+      const target = match[1]!;
+      if (target.startsWith("http")) continue;
+      if (!known.has(normalizeRelative(dir, target))) broken.push(`${doc.path} → ${target}`);
+    }
+  }
+  return broken.length === 0
+    ? { verdict: "ok", message: "no broken document references" }
+    : {
+        verdict: "warn",
+        message: `broken reference(s): ${broken.join("; ")}`,
+        hint: "Point the link at an existing .map document.",
+      };
+}
+
+/** Resolve a POSIX relative link from `dir`, collapsing `.` and `..`. */
+function normalizeRelative(dir: string, target: string): string {
+  const parts = (dir ? dir.split("/") : []).concat(target.split("/"));
+  const stack: string[] = [];
+  for (const part of parts) {
+    if (part === "." || part === "") continue;
+    if (part === "..") stack.pop();
+    else stack.push(part);
+  }
+  return stack.join("/");
 }
 
 async function checkAnalysisReport(

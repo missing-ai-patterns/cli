@@ -21,6 +21,8 @@ import { InMemoryPatternGraph } from "./graph/index.ts";
 import { AnalyzerRegistry, DependencyManifestAnalyzer } from "./analyzer/index.ts";
 import type { Recommender } from "./recommendation/index.ts";
 import { RuleBasedRecommender } from "./recommendation/index.ts";
+import type { AdapterRegistry } from "./compiler/index.ts";
+import { defaultAdapterRegistry } from "./compiler/index.ts";
 
 export interface Services {
   readonly storage: Storage;
@@ -29,6 +31,8 @@ export interface Services {
   readonly graph: PatternGraph;
   readonly analyzers: AnalyzerRegistry;
   readonly recommender: Recommender;
+  /** Target adapters the context compiler (`map sync`) writes through. */
+  readonly adapters: AdapterRegistry;
 }
 
 /** Allow callers (and tests) to override any single dependency. */
@@ -43,6 +47,7 @@ export function createDefaultServices(overrides: ServiceOverrides = {}): Service
     graph: overrides.graph ?? new InMemoryPatternGraph(),
     analyzers: overrides.analyzers ?? defaultAnalyzers(storage),
     recommender: overrides.recommender ?? new RuleBasedRecommender(),
+    adapters: overrides.adapters ?? defaultAdapterRegistry(),
   };
 }
 
