@@ -1,17 +1,15 @@
 {
-  "name": "@missing-ai-patterns/cli",
-  "version": "0.5.0",
-  "description": "MAP CLI \u2014 initialize an AI-architecture workspace, analyze a codebase, and adopt Missing AI Patterns.",
+  "name": "@missing-ai-patterns/registry",
+  "version": "0.5.1",
+  "description": "The MAP registry contract — the machine-readable pattern catalog schema, its TypeScript types, and a validating parser shared by every MAP tool.",
   "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/missing-ai-patterns/cli.git"
+    "url": "git+https://github.com/missing-ai-patterns/cli.git",
+    "directory": "packages/registry"
   },
   "homepage": "https://github.com/missing-ai-patterns/map",
-  "bin": {
-    "map": "./dist/map.js"
-  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -19,34 +17,27 @@
     }
   },
   "files": [
-    "dist",
-    "templates",
-    "registry-snapshot"
+    "dist"
   ],
   "engines": {
     "node": ">=20"
   },
   "scripts": {
-    "map": "node ./bin/map.ts",
     "build": "tsup",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "test:watch": "vitest",
-    "sync-snapshot": "node ./scripts/sync-snapshot.ts"
+    "test:watch": "vitest"
   },
   "keywords": [
     "ai",
     "architecture",
     "patterns",
-    "cli",
-    "rag",
-    "analysis"
+    "registry",
+    "catalog",
+    "schema"
   ],
   "dependencies": {
-    "@inquirer/prompts": "^7.0.0",
-    "commander": "^14.0.0",
-    "@missing-ai-patterns/registry": "workspace:^",
     "@missing-ai-patterns/score": "workspace:^"
   },
   "devDependencies": {

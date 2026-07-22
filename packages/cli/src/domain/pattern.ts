@@ -7,21 +7,11 @@
  * Markdown, files, or databases.
  */
 
-/** Stable identifier for a pattern, e.g. "retrieval/reranking". */
-export type PatternId = string;
-
-/** The ten MAP categories. Mirrors the `patterns/` directory. */
-export type PatternCategory =
-  | "retrieval"
-  | "memory"
-  | "agents"
-  | "security"
-  | "context"
-  | "evaluation"
-  | "performance"
-  | "routing"
-  | "tool-calling"
-  | "observability";
+// The pattern identifier and category are part of the shared registry contract;
+// they are defined once in @missing-ai-patterns/registry and re-exported here so
+// the rest of the CLI can keep importing them from the domain layer.
+import type { PatternId, PatternCategory } from "@missing-ai-patterns/registry";
+export type { PatternId, PatternCategory };
 
 /** A coarse, comparable rating used across several pattern fields. */
 export type Rating = "low" | "medium" | "high";
