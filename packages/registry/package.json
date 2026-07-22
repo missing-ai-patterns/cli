@@ -1,6 +1,6 @@
 {
   "name": "@missing-ai-patterns/registry",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "The MAP registry contract — the machine-readable pattern catalog schema, its TypeScript types, and a validating parser shared by every MAP tool.",
   "type": "module",
   "license": "MIT",
