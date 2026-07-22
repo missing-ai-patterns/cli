@@ -18,8 +18,27 @@ import { bundledRegistryPath } from "../assets.ts";
 import type { RegistryDocument } from "./registry.ts";
 import { parseRegistry } from "./registry.ts";
 
-export const DEFAULT_REGISTRY_URL =
+/**
+ * Where a fresh registry is downloaded from. The published location is a constant,
+ * but it is overridable via the `MAP_REGISTRY_URL` environment variable so the
+ * content repository can be renamed (or a mirror used) without a code change —
+ * only this one place needs to know the URL.
+ *
+ * (This is distinct from `MAP_REGISTRY`, the per-invocation user override that may
+ * point at a local file or a URL.)
+ */
+const FALLBACK_REGISTRY_URL =
   "https://github.com/missing-ai-patterns/map/releases/latest/download/registry.json";
+
+/** Resolve the published registry URL, honouring the `MAP_REGISTRY_URL` override. */
+export function defaultRegistryUrl(
+  env: Readonly<Record<string, string | undefined>> = process.env,
+): string {
+  const override = env["MAP_REGISTRY_URL"];
+  return override !== undefined && override !== "" ? override : FALLBACK_REGISTRY_URL;
+}
+
+export const DEFAULT_REGISTRY_URL = defaultRegistryUrl();
 
 export type RegistrySourceKind = "override" | "cache" | "bundled";
 
@@ -45,7 +64,7 @@ export function registryUpdateUrl(
   env: Readonly<Record<string, string | undefined>> = process.env,
 ): string {
   const override = env["MAP_REGISTRY"];
-  return override !== undefined && isUrl(override) ? override : DEFAULT_REGISTRY_URL;
+  return override !== undefined && isUrl(override) ? override : defaultRegistryUrl(env);
 }
 
 export async function resolveRegistrySource(
