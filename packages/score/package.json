@@ -1,6 +1,6 @@
 {
   "name": "@missing-ai-patterns/score",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "MAP Score — a compact 1–5 star rating system for AI architecture patterns. Schema, validation, and rendering.",
   "type": "module",
   "license": "MIT",
